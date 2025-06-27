@@ -1,0 +1,332 @@
+﻿@model WebApplication.Info.BLLDetail
+@{
+    ViewData["Title"] = "代码生成器";
+}
+
+<div>
+    @*BLL文件*@
+    <form enctype="multipart/form-data" asp-controller="home" asp-action="createbll" method="post">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="card-header form-group row">
+            <label class="card-header">BLL文件</label>
+            <button type="submit" class="btn btn-primary">提交</button>
+        </div>
+        <div class="card-body">
+            <label asp-for="FileOutput" class="col-sm-2"></label>
+            <div class="col-sm-10 form-group row">
+                <select asp-for="FileOutput" asp-items="Html.GetEnumSelectList<FileOutputEnum>()" class="custom-select mr-sm-2">
+                </select>
+                <span asp-validation-for="FileOutput" class="text-danger"></span>
+            </div>
+            @*文件名*@
+            <label asp-for="NameSpace" class="col-sm-2"></label>
+            <div class="col-sm-10 form-group row">
+                <input asp-for ="NameSpace" class="form-control" placeholder="请输入命名空间" />
+                <span asp-validation-for="NameSpace" class="text-danger"></span>
+            </div>
+            <label asp-for="Name" class="col-sm-2"></label>
+            <div class="col-sm-10 form-group row">
+                <input asp-for="Name" class="form-control" placeholder="请输入文件名" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            @*文件名*@
+            @*方法列表*@
+            <card class="card">
+                <div class="card-header">
+                    <label asp-for="MethodList" class="col-sm-2"></label>
+                </div>
+                <div class="card-body bll-methods">
+                    @if(Model.MethodList != null && Model.MethodList.Count > 0 )
+                    {
+                        @for(int i = 0; i < Model.MethodList.Count; i++)
+                        {
+                            <div id="methodItem_@i">
+                                <label class="col-sm-2">方法名</label><div class= "col-sm-10" ><input placeholder = "请输入方法名" asp-for="@Model.MethodList[i].Name" /></div>
+                                <label class="col-sm-2">方法返回值</label><div class= "col-sm-10" ><input placeholder = "请输入方法返回值" asp-for = "@Model.MethodList[i].ReturnType" /></div>
+                                <label class="col-sm-2">注释</label><div class= "col-sm-10" ><input placeholder = "请输入注释" asp-for = "@Model.MethodList[i].Remark" /></div>
+                                <label class="col-sm-2">特性</label><div class= "col-sm-10" ><input placeholder = "请输入特性" asp-for = "@Model.MethodList[i].AttributeList" /></div>
+                                <card class="card">
+                                    <div class="card-header">
+                                        <label class="col-sm-2">参数列表</label>
+                                    </div>
+                                    <div class="card-body bll-params">
+                                    @if(Model.MethodList[i].ParamList != null && Model.MethodList[i].ParamList.Count > 0)
+                                    {
+                                        @for(int j = 0; j < Model.MethodList[i].ParamList.Count; j++)
+                                        {
+                                            <div class="form-group">
+                                                <label for="param_name">参数名</label>
+                                                <input type="text" class="form-control" asp-for="@Model.MethodList[i].ParamList[j].Name" placeholder="请输入参数名称" />
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="param_type">数据类型</label>
+                                                <input type="text" class="form-control" asp-for="@Model.MethodList[i].ParamList[j].Type" placeholder="请输入数据类型" />
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="param_remark">注释</label>
+                                                <input type="text" class="form-control" asp-for="@Model.MethodList[i].ParamList[j].Remark" placeholder="请输入注释" />
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="param_attributelist">特性</label>
+                                                <input type="text" class="form-control"  asp-for="@Model.MethodList[i].ParamList[j].AttributeList" placeholder="请输入特性" />
+                                            </div>
+                                            <hr />
+                                        }
+                                    }
+                                    </div>
+                                    <div class="card-footer">
+                                        <input type = "button" class= "btn btn-outline-success form-control" id="paramList-button-add_@i" value = "+ 添加参数列表" />
+                                    </div>
+                                </card>
+                                <input type = "button" class= "btn btn-danger" id="method-button-cancel_@i" value = "取消" />
+                                <hr />
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="card-footer">
+                    <input type="button" class="btn btn-outline-success form-control bll-button-add" value="+ 添加方法" />
+                </div>
+            </card>
+            @*方法列表*@
+        </div>
+        @*参数列表 窗口页面*@
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="myModalLabel">新增</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <input id="methodID" hidden />
+                    </div>
+                    <div class="modal-body param">
+                    </div>
+                    <hr />
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-success" id="property-button-add">+ 添加参数</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span>关闭</button>
+                        <button type='button' id="modalbtn_submit" class="btn btn-primary" data-dismiss="modal"><span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>保存</button>
+                    </div>
+                </div>
+            </div>
+         </div>
+        @*参数列表 窗口页面*@
+    </form>
+    @*BLL文件*@
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script type="text/javascript">
+        $(document).on('click', '#property-button-add', function () {
+
+                $('.param').append(
+                    '<div class="form-group">'
+                        + '<label for="param_name">参数名</label>'
+                        + '<input type="text" class="form-control" id="param_name" placeholder="请输入参数名称" />'
+                    + '</div>'
+                    + '<div class="form-group">'
+                        + '<label for="param_type">数据类型</label>'
+                        + '<input type="text" class="form-control" id="param_type" placeholder="请输入数据类型" />'
+                    + '</div>'
+                    + '<div class="form-group">'
+                        + '<label for="param_remark">注释</label>'
+                        + '<input type="text" class="form-control" id="param_remark" placeholder="请输入注释" />'
+                    + '</div>'
+                    + '<div class="form-group">'
+                        + '<label for="param_attributelist">特性</label>'
+                        + '<input type="text" class="form-control" id="param_attributelist" placeholder="请输入特性" />'
+                    + '</div>'
+                    + '<input type = "button" class= "btn btn-danger" id="param-button-cancel" value = "取消" />'
+                    + '<hr />').show()
+            });
+
+        $(document).on('click', '#param-button-cancel', function () {
+
+            $(this).prevUntil('#param-button-cancel').remove()
+            $(this).remove()  
+
+        });
+
+        $(document).ready(function() {
+            var i = 0
+            var bllMethods = $(".bll-methods")
+
+            //添加方法按钮
+            $(document).on("click", '.bll-button-add', function () {
+                //实体内list<T>类型的字段使用asp-for属性 无效
+                bllMethods.append(
+                    '<div id="methodItem_' + i + '">'
+                        + '<label class="col-sm-2">方法名</label><div class= "col-sm-10" ><input placeholder = "请输入方法名" name = "MethodList[' + i + '].Name" /></div>'
+                        + '<label class="col-sm-2">方法返回值</label><div class= "col-sm-10" ><input placeholder = "请输入方法返回值" name = "MethodList[' + i + '].ReturnType" /></div>'
+                        + '<label class="col-sm-2">注释</label><div class= "col-sm-10" ><input placeholder = "请输入注释" name = "MethodList[' + i + '].Remark" /></div>'
+                        + '<label class="col-sm-2">特性</label><div class= "col-sm-10" ><input placeholder = "请输入特性" name = "MethodList[' + i + '].AttributeList" /></div>'
+                        + '<card class="card">'
+                            + '<div class="card-header">'
+                                + '<label class="col-sm-2">参数列表</label>'
+                            + '</div>'
+                            + '<div class="card-body bll-params">'
+                            + '</div>'
+                            + '<div class="card-footer">'
+                                + '<input type = "button" class= "btn btn-outline-success form-control" id = "paramList-button-add_' + i + '" value = "+ 添加参数列表" />'
+                            + '</div>'
+                        + '</card>'
+                        + '<input type = "button" class= "btn btn-danger" id="method-button-cancel_' + i + '" value = "取消" />'
+                        + '<hr />'
+                        + '</div>').show()
+                   
+                //注册新增按钮的事件
+                $(document).on('click', '#paramList-button-add_' + i, function (item) {
+                    var methodID = $(this)[0].id.substr(-1)
+
+                    $("#myModalLabel").text("新增参数");
+                    $('#myModal').modal();
+                    $('#methodID').attr('value', methodID)
+
+                    var methodItemChild = $('#methodItem_' + methodID).find('.bll-params').children()
+                    var length = methodItemChild.length / 5;
+
+                    var newTags = ''
+                    for(var paramID = 0; paramID < length; paramID++)
+                    {
+                        var name = methodItemChild.eq(5 * paramID).children().eq(1).val()
+                        var type = methodItemChild.eq(5 * paramID + 1).children().eq(1).val()
+                        var remark = methodItemChild.eq(5 * paramID + 2).children().eq(1).val()
+                        var attList = methodItemChild.eq(5 * paramID + 3).children().eq(1).val()
+
+                        newTags += '<div class="form-group">'
+                                        + '<label for="param_name">参数名</label>'
+                                        + '<input type="text" class="form-control" id="param_name" placeholder="请输入参数名称" value = "' + name + '" />'
+                                    + '</div>'
+                                    + '<div class="form-group">'
+                                        + '<label for="param_type">数据类型</label>'
+                                        + '<input type="text" class="form-control" id="param_type" placeholder="请输入数据类型" value = "' + type + '" />'
+                                    + '</div>'
+                                    + '<div class="form-group">'
+                                        + '<label for="param_remark">注释</label>'
+                                        + '<input type="text" class="form-control" id="param_remark" placeholder="请输入注释" value = "' + remark + '" />'
+                                    + '</div>'
+                                    + '<div class="form-group">'
+                                        + '<label for="param_attributelist">特性</label>'
+                                        + '<input type="text" class="form-control" id="param_attributelist" placeholder="请输入特性" value = "' + attList + '" />'
+                                    + '</div>'
+                                    + '<input type = "button" class= "btn btn-danger" id="param-button-cancel" value = "取消" />'
+                                    + '<hr />'
+                       }
+                       
+                        $('.param').html(newTags)
+                });
+
+                //取消按钮
+                $(document).on("click", '#method-button-cancel_' + i, function (item) {
+                    var itemID = item.currentTarget['id'].substr(-1)
+                    $('#methodItem_' + itemID).remove()
+
+                    var methodTags = bllMethods.find('.bll-params');
+
+                    var inputTags = bllMethods.find('input:not(.form-control)');
+
+                    var newHTML = ''
+                    for(var j = 0; j < methodTags.length; j++)
+                    {
+                        var name = inputTags.eq(5 * j).val();
+                        var returnType = inputTags.eq(5 * j + 1).val();
+                        var remark = inputTags.eq(5 * j + 2).val();
+                        var attList = inputTags.eq(5 * j + 3).val();
+                        
+                        newHTML += '<div id="methodItem_' + j + '">'
+                                        + '<label class="col-sm-2">方法名</label><div class= "col-sm-10" ><input placeholder = "请输入方法名" name = "MethodList[' + j + '].Name" value = "' + name + '" /></div>'
+                                        + '<label class="col-sm-2">方法返回值</label><div class= "col-sm-10" ><input placeholder = "请输入方法返回值" name = "MethodList[' + j + '].ReturnType" value = "' + returnType + '" /></div>'
+                                        + '<label class="col-sm-2">注释</label><div class= "col-sm-10" ><input placeholder = "请输入注释" name = "MethodList[' + j + '].Remark" value = "' + remark + '" /></div>'
+                                        + '<label class="col-sm-2">特性</label><div class= "col-sm-10" ><input placeholder = "请输入特性" name = "MethodList[' + j + '].AttributeList" value = "' + attList + '" /></div>'
+                                        + '<card class="card">'
+                                            + '<div class="card-header">'
+                                                + '<label class="col-sm-2">参数列表</label>'
+                                            + '</div>'
+                                            + '<div class="card-body bll-params">'
+
+                        var paramInfo = methodTags.eq(j).children()
+                        for(var pj = 0; pj < paramInfo.length / 5; pj++)
+                        {
+                            var name = paramInfo.eq(pj * 5).children().eq(1).val()
+                            var type = paramInfo.eq(pj * 5 + 1).children().eq(1).val()
+                            var remark = paramInfo.eq(pj * 5 + 2).children().eq(1).val()
+                            var attributelist = paramInfo.eq(pj * 5 + 3).children().eq(1).val()
+
+                             newHTML += '<div class="form-group">'
+                                            + '<label for="param_name">参数名</label>'
+                                            + '<input type="text" class="form-control" name="MethodList[' + j + '].ParamList[' + pj + '].Name" value="' + name + '" placeholder="请输入参数名称" />'
+                                        + '</div>'
+                                        + '<div class="form-group">'
+                                            + '<label for="param_type">数据类型</label>'
+                                            + '<input type="text" class="form-control" name="MethodList[' + j + '].ParamList[' + pj + '].Type" value="' + type + '" placeholder="请输入数据类型" />'
+                                        + '</div>'
+                                        + '<div class="form-group">'
+                                            + '<label for="param_remark">注释</label>'
+                                            + '<input type="text" class="form-control" name="MethodList[' + j + '].ParamList[' + pj + '].Remark" value="' + remark + '" placeholder="请输入注释" />'
+                                        + '</div>'
+                                        + '<div class="form-group">'
+                                            + '<label for="param_attributelist">特性</label>'
+                                            + '<input type="text" class="form-control"  name="MethodList[' + j + '].ParamList[' + pj + '].Attributelist" value="' + attributelist + '" placeholder="请输入特性" />'
+                                        + '</div>'
+                                        + '<hr />'
+                        }
+
+                        newHTML +=            '</div>'
+                                            + '<div class="card-footer">'
+                                                + '<input type = "button" class= "btn btn-outline-success form-control" id = "paramList-button-add_' + j + '" value = "+ 添加参数列表" />'
+                                            + '</div>'
+                                        + '</card>'
+                                        + '<input type = "button" class= "btn btn-danger" id="method-button-cancel_' + j + '" value = "取消" />'
+                                        + '<hr />'
+                                   + '</div>'
+                    }
+                    bllMethods.html(newHTML)
+                });
+
+                $(document).on('click', '#modalbtn_submit', function(item){
+                    var list = []
+                    var paramLength = $('input#param_name').length
+                    for(var paramID = 0; paramID < paramLength; paramID++)
+                    {
+                        list.push({
+                            name: $('input#param_name').eq(paramID).val(),
+                            type: $('input#param_type').eq(paramID).val(),
+                            remark: $('input#param_remark').eq(paramID).val(),
+                            attributelist: $('input#param_attributelist').eq(paramID).val(),
+                        })
+                    }
+
+                    var methodID = Number($('input#methodID').val())
+                    var newTags = ''
+
+                    for(var paramID = 0; paramID < paramLength; paramID++)
+                    {
+                        newTags +=  
+                        '<div class="form-group">'
+                            + '<label for="param_name">参数名</label>'
+                            + '<input type="text" class="form-control" name="MethodList[' + methodID + '].ParamList[' + paramID + '].Name" value="' + list[paramID].name + '" placeholder="请输入参数名称" />'
+                        + '</div>'
+                        + '<div class="form-group">'
+                            + '<label for="param_type">数据类型</label>'
+                            + '<input type="text" class="form-control" name="MethodList[' + methodID + '].ParamList[' + paramID + '].Type" value="' + list[paramID].type + '" placeholder="请输入数据类型" />'
+                        + '</div>'
+                        + '<div class="form-group">'
+                            + '<label for="param_remark">注释</label>'
+                            + '<input type="text" class="form-control" name="MethodList[' + methodID + '].ParamList[' + paramID + '].Remark" value="' + list[paramID].remark + '" placeholder="请输入注释" />'
+                        + '</div>'
+                        + '<div class="form-group">'
+                            + '<label for="param_attributelist">特性</label>'
+                            + '<input type="text" class="form-control"  name="MethodList[' + methodID + '].ParamList[' + paramID + '].Attributelist" value="' + list[paramID].attributelist + '" placeholder="请输入特性" />'
+                        + '</div>'
+                        + '<hr />'
+                    }
+
+                    $('.bll-params').eq(methodID).html(newTags)
+                });
+
+                i++;
+            });
+
+        });
+    </script>
+</div>

@@ -1,0 +1,145 @@
+﻿@model WebApplication.Info.ModelDetail
+@{
+    ViewData["Title"] = "代码生成器";
+}
+
+<div>
+    @*Model文件*@
+    <form enctype="multipart/form-data" asp-controller="home" asp-action="createmodel" method="post">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="card-header form-group row">
+            <label class="card-header">Model文件</label>
+            <button type="submit" class="btn btn-primary">提交</button>
+        </div>
+        <div class="card-body">
+            @*文件名*@
+            <label asp-for="NameSpace" class="col-sm-2"></label>
+            <div class="col-sm-10 form-group row">
+                <input asp-for ="NameSpace" class="form-control" placeholder="请输入命名空间" />
+                <span asp-validation-for="NameSpace" class="text-danger"></span>
+            </div>
+            <label asp-for="Name" class="col-sm-2"></label>
+            <div class="col-sm-10 form-group row">
+                <input asp-for="Name" class="form-control" placeholder="请输入文件名" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            @*文件名*@
+            @*属性列表*@
+            <card class="card">
+                <div class="card-header">
+                    <label asp-for="PropertyList" class="col-sm-2"></label>
+                </div>
+                <div class="card-body model-properties">
+                    @if(Model.PropertyList != null && Model.PropertyList.Count > 0 )
+                    {
+                        @for(int i = 0; i < Model.PropertyList.Count; i++)
+                        {
+                            <div id="propertyItem_@i">
+                                <label class="col-sm-2">属性名</label><div class= "col-sm-10" ><input placeholder = "请输入属性名" asp-for="@Model.PropertyList[i].Name" /></div>
+                                <label class="col-sm-2">数据类型</label><div class= "col-sm-10" ><input placeholder = "请输入数据类型" asp-for = "@Model.PropertyList[i].Type" /></div>
+                                <label class="col-sm-2">注释</label><div class= "col-sm-10" ><input placeholder = "请输入注释" asp-for = "@Model.PropertyList[i].Remark" /></div>
+                                <label class="col-sm-2">特性</label><div class= "col-sm-10" ><input placeholder = "请输入特性" asp-for = "@Model.PropertyList[i].AttributeList" /></div>
+                                <input type = "button" class= "btn btn-danger" id="property-button-cancel_@i" value = "取消" />
+                                <hr />
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="card-footer">
+                    <input type="button" class="btn btn-outline-success form-control model-button-add" value="+ 添加属性" />
+                </div>
+            </card>
+            @*属性列表*@
+        </div>
+    </form>
+    @*Model文件*@
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var i = 0
+            var modelProperties = $(".model-properties")
+
+            //添加属性按钮
+            $(document).on("click", '.model-button-add', function () {
+                //实体内list<T>类型的字段使用asp-for属性 无效
+                modelProperties.append(
+                    '<div id="propertyItem_' + i + '"><label class="col-sm-2">属性名</label><div class= "col-sm-10" ><input placeholder = "请输入属性名" name = "PropertyList[' + i + '].Name" /></div>'
+                    + '<label class="col-sm-2">数据类型</label><div class= "col-sm-10" ><input placeholder = "请输入数据类型" name = "PropertyList[' + i + '].Type" /></div>'
+                    + '<label class="col-sm-2">注释</label><div class= "col-sm-10" ><input placeholder = "请输入注释" name = "PropertyList[' + i + '].Remark" /></div>'
+                    + '<label class="col-sm-2">特性</label><div class= "col-sm-10" ><input placeholder = "请输入特性" name = "PropertyList[' + i + '].AttributeList" /></div>'
+                    + '<input type = "button" class= "btn btn-danger" id="property-button-cancel_' + i + '" value = "取消" /><hr /></div>').show()
+                    @*<input type = "button" class= "btn btn-success" id="property-button-save_' + i + '" value = "确定" />*@
+
+                //保存按钮
+                @*$(document).on("click", '#property-button-save_' + i, function (item) {
+                    console.log($(item).find('div[id:propertyItem_'+ i +']'))
+                    var itemID = item.currentTarget['id'].substr(-1)
+
+                    var name = $('input[id=Name_' + itemID + ']').val()
+                    var type = $('input[id=Type_' + itemID + ']').val()
+                    var remark = $('input[id=Remark_' + itemID + ']').val()
+                    var attList = $('input[id=AttributeList_' + itemID + ']').val()
+
+                    $('#propertyItem_' + itemID).html(
+                        '<div id="propertyItem_' + itemID + '"><label asp-for = "PropertyList[' + itemID + '].Name" class="col-sm-2">属性名</label><div class= "col-sm-10" ><input id = "Name_' + itemID + '" placeholder = "请输入属性名" value=' + name + ' asp-for = "PropertyList[' + itemID + '].Name" disabled /></div>'
+                        + '<label asp-for = "PropertyList[' + itemID + '].Type" class="col-sm-2">数据类型</label><div class= "col-sm-10" ><input id = "Type_' + itemID + '" placeholder = "请输入数据类型" value=' + type + ' asp-for = "PropertyList[' + itemID + '].Type" disabled /></div>'
+                        + '<label asp-for = "PropertyList[' + itemID + '].Remark" class="col-sm-2">注释</label><div class= "col-sm-10" ><input id = "Remark_' + itemID + '" placeholder = "请输入注释" value=' + remark + ' asp-for = "PropertyList[' + itemID + '].Remark" disabled /></div>'
+                        + '<label asp-for = "PropertyList[' + itemID + '].AttributeList" class="col-sm-2">特性</label><div class= "col-sm-10" ><input id = "AttributeList_' + itemID + '" placeholder = "请输入特性" value=' + attList + ' asp-for = "PropertyList[' + itemID + '].AttributeList" disabled />'
+                        + '<input type = "button" class= "btn btn-primary" id="property-button-update_' + itemID + '" value = "修改" /><hr /></div>').show()
+
+                    //修改按钮
+                    $(document).on("click", '#property-button-update_' + itemID, function (item) {
+                        var itemID = item.currentTarget['id'].substr(-1)
+
+                        var name = $('input[id=Name_' + itemID + ']').val()
+                        var type = $('input[id=Type_' + itemID + ']').val()
+                        var remark = $('input[id=Remark_' + itemID + ']').val()
+                        var attList = $('input[id=AttributeList_' + itemID + ']').val()
+
+                        $('#propertyItem_' + itemID).html(
+                            '<div id="propertyItem_' + itemID + '"><label asp-for = "PropertyList[' + itemID + '].Name" class="col-sm-2">属性名</label><div class= "col-sm-10" ><input id = "Name_' + itemID + '" placeholder = "请输入属性名" value=' + name + ' asp-for = "PropertyList[' + itemID + '].Name" /></div>'
+                            + '<label asp-for = "PropertyList[' + itemID + '].Type" class="col-sm-2">数据类型</label><div class= "col-sm-10" ><input id = "Type_' + itemID + '" placeholder = "请输入数据类型" value=' + type + ' asp-for = "PropertyList[' + itemID + '].Type" /></div>'
+                            + '<label asp-for = "PropertyList[' + itemID + '].Remark" class="col-sm-2">注释</label><div class= "col-sm-10" ><input id = "Remark_' + itemID + '" placeholder = "请输入注释" value=' + remark + ' asp-for = "PropertyList[' + itemID + '].Remark" /></div>'
+                            + '<label asp-for = "PropertyList[' + itemID + '].AttributeList" class="col-sm-2">特性</label><div class= "col-sm-10" ><input id = "AttributeList_' + itemID + '" placeholder = "请输入特性" value=' + attList + ' asp-for = "PropertyList[' + itemID + '].AttributeList" />'
+                            + '<input type = "button" class= "btn btn-success" id="property-button-save_' + itemID + '" value = "确定" /><input type = "button" class= "btn btn-danger" id="property-button-cancel_' + itemID + '" value = "取消" /><hr /></div>').show()
+                    });
+
+                });*@
+
+                //取消按钮
+                $(document).on("click", '#property-button-cancel_' + i, function (item) {
+                    var itemID = item.currentTarget['id'].substr(-1)
+                    $('#propertyItem_' + itemID).remove()
+
+                    var count = modelProperties.find('label').length / 4;
+                    
+                    var inputTags = modelProperties.find('input')
+                    var newHTML = ''
+                    for(var j = 0; j < count; j++)
+                    {
+                        var name = inputTags.eq(5 * j).val();
+                        var type = inputTags.eq(5 * j + 1).val();
+                        var remark = inputTags.eq(5 * j + 2).val();
+                        var attList = inputTags.eq(5 * j + 3).val();
+                        
+                        newHTML += '<div id="propertyItem_' + j + '"><label class="col-sm-2">属性名</label><div class= "col-sm-10" ><input placeholder = "请输入属性名" name = "PropertyList[' + j + '].Name" value="' + name + '" /></div>'
+                                    + '<label class="col-sm-2">数据类型</label><div class= "col-sm-10" ><input placeholder = "请输入数据类型" name = "PropertyList[' + j + '].Type" value="' + type + '"  /></div>'
+                                    + '<label class="col-sm-2">注释</label><div class= "col-sm-10" ><input placeholder = "请输入注释" name = "PropertyList[' + j + '].Remark"  value="' + remark + '"  /></div>'
+                                    + '<label class="col-sm-2">特性</label><div class= "col-sm-10" ><input placeholder = "请输入特性" name = "PropertyList[' + j + '].AttributeList"  value="' + attList + '" /></div>'
+                                    + '<input type = "button" class= "btn btn-danger" id="property-button-cancel_' + j + '" value = "取消" /><hr /></div>'
+                    }
+                    modelProperties.html(newHTML)
+
+                    i = count;
+                    console.log(i)
+                });
+
+                i++;
+                console.log(i)
+            });
+
+        });
+    </script>
+</div>

@@ -1,0 +1,9 @@
+{
+  "ProjectPath": {
+    "BasePath": "D:\\User\\Document\\WorkDoc\\MyCodeGenerator\\Output",
+    "ControllerPath": "\\Controller",
+    "BLLPath": "\\BLL",
+    "InterfacePath": "\\interface",
+    "ModelPath": "\\Model"
+  }
+}
